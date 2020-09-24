@@ -22,6 +22,8 @@ public class AddActor implements HttpHandler
         try {
             if (r.getRequestMethod().equals("PUT")) {
                 handlePut(r);
+            }else{
+                r.sendResponseHeaders(400, -1);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -29,26 +31,28 @@ public class AddActor implements HttpHandler
     }
 
     public void handlePut(HttpExchange r) throws IOException, JSONException{
-        String body = Utils.convert(r.getRequestBody());
-        JSONObject deserialized = new JSONObject(body);
-
         String name = actorModel.getName();
         String actorId = actorModel.getActorId();
 
-        if(!deserialized.has("name") || !deserialized.has("actorId")){
-            r.sendResponseHeaders(400, -1);
-        }
-
+        try{
+        String body = Utils.convert(r.getRequestBody());
+        JSONObject deserialized = new JSONObject(body);
         name = deserialized.getString("name");
         actorId = deserialized.getString("actorId");
+        } catch (JSONException e) {
+             r.sendResponseHeaders(400, -1);
+        }
 
-        Neo4JConnector nb = new Neo4JConnector();
-        nb.insertActor(name, actorId);
-        nb.close();
+        try{
+            Neo4JConnector nb = new Neo4JConnector();
+            nb.insertActor(name, actorId);
+            nb.close();
+            actorModel.setName(name);
+            actorModel.setActorId(actorId);
+            r.sendResponseHeaders(200, -1);
 
-        actorModel.setName(name);
-        actorModel.setActorId(actorId);
-
-        r.sendResponseHeaders(200, -1);
+        }catch(Exception J){
+            r.sendResponseHeaders(500, -1);
+        }
     }
 }
