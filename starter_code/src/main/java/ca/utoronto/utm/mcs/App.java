@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 
 import ca.utoronto.utm.mcs.API.AddActor;
+import ca.utoronto.utm.mcs.API.AddMovie;
 import ca.utoronto.utm.mcs.Models.ActorModel;
 
+import ca.utoronto.utm.mcs.Models.MovieModel;
 import com.sun.net.httpserver.HttpServer;
 
 public class App 
@@ -15,7 +17,10 @@ public class App
 
     public static void Initialize(){
         ActorModel actorModel = new ActorModel();
+        MovieModel movieModel = new MovieModel();
+
         server.createContext("/api/v1/addActor", new AddActor(actorModel));
+        server.createContext("/api/v1/addMovie", new AddMovie(movieModel));
     }
 
     public static void main(String[] args) throws IOException
