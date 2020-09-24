@@ -65,6 +65,27 @@ public class Neo4JConnector {
         }
     }
 
+    public void addRelationship(String name, String movieId) throws Exception, BadRequestException {
+        try (Session session = driver.session()){
+            try (Transaction tx = session.beginTransaction()) {
+                Result nameResult = tx.run("MATCH (n:movie {name: $x}) RETURN n"
+                        , parameters("x", name ) );
+                Result movieIdResult = tx.run("MATCH (n:movie {id: $x}) RETURN n"
+                        , parameters("x", movieId ) );
+                if (nameResult.list().size() == 0 && movieIdResult.list().size() == 0){
+                    tx.run("MERGE (a:movie {Name: $x, id: $y})",
+                            parameters("x", name, "y", movieId));
+                    tx.commit();
+                    session.close();
+                } else{
+                    throw new BadRequestException();
+                }
+            }
+        }catch (Exception e){
+            throw e;
+        }
+    }
+
     public void close() {
         driver.close();
     }

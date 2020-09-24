@@ -5,9 +5,11 @@ import java.net.InetSocketAddress;
 
 import ca.utoronto.utm.mcs.API.AddActor;
 import ca.utoronto.utm.mcs.API.AddMovie;
+import ca.utoronto.utm.mcs.API.AddRelationship;
 import ca.utoronto.utm.mcs.Models.ActorModel;
 
 import ca.utoronto.utm.mcs.Models.MovieModel;
+import ca.utoronto.utm.mcs.Models.RelationshipModel;
 import com.sun.net.httpserver.HttpServer;
 
 public class App 
@@ -18,9 +20,11 @@ public class App
     public static void Initialize(){
         ActorModel actorModel = new ActorModel();
         MovieModel movieModel = new MovieModel();
+        RelationshipModel relationshipModel = new RelationshipModel();
 
         server.createContext("/api/v1/addActor", new AddActor(actorModel));
         server.createContext("/api/v1/addMovie", new AddMovie(movieModel));
+        server.createContext("/api/v1/addRelationship", new AddRelationship(relationshipModel));
     }
 
     public static void main(String[] args) throws IOException
