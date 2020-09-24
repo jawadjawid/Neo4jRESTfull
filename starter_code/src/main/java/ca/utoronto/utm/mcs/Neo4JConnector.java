@@ -1,6 +1,8 @@
 package ca.utoronto.utm.mcs;
 
 import static org.neo4j.driver.Values.parameters;
+
+import ca.utoronto.utm.mcs.exceptions.BadRequestException;
 import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.GraphDatabase;
@@ -21,16 +23,20 @@ public class Neo4JConnector {
         driver = GraphDatabase.driver(uriDb, AuthTokens.basic("neo4j","secret"));
     }
 
-    public void insertActor(String name, String actorId) throws Exception{
+    public void addActor(String name, String actorId) throws Exception, BadRequestException {
         try (Session session = driver.session()){
             try (Transaction tx = session.beginTransaction()) {
-                Result result = tx.run("MATCH (n {name: $x}) RETURN n"
+                Result nameResult = tx.run("MATCH (n {name: $x}) RETURN n"
                         , parameters("x", name ) );
-                if (result.list().size() == 0){
+                Result actorIdResult = tx.run("MATCH (n {actorId: $x}) RETURN n"
+                        , parameters("x", actorId ) );
+                if (nameResult.list().size() == 0 && actorIdResult.list().size() == 0){
                     tx.run("MERGE (a:Actor {name: $x, actorId: $y})",
                             parameters("x", name, "y", actorId));
                     tx.commit();
                     session.close();
+                } else{
+                    throw new BadRequestException();
                 }
             }
         }catch (Exception e){

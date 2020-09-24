@@ -1,10 +1,10 @@
 package ca.utoronto.utm.mcs.API;
 
 import java.io.IOException;
-import java.io.OutputStream;
 
 import ca.utoronto.utm.mcs.Models.ActorModel;
 import ca.utoronto.utm.mcs.Neo4JConnector;
+import ca.utoronto.utm.mcs.exceptions.BadRequestException;
 import org.json.*;
 
 import com.sun.net.httpserver.HttpExchange;
@@ -45,13 +45,15 @@ public class AddActor implements HttpHandler
 
         try{
             Neo4JConnector nb = new Neo4JConnector();
-            nb.insertActor(name, actorId);
+            nb.addActor(name, actorId);
             nb.close();
             actorModel.setName(name);
             actorModel.setActorId(actorId);
             r.sendResponseHeaders(200, -1);
 
-        }catch(Exception J){
+        } catch (BadRequestException e){
+            r.sendResponseHeaders(400, -1);
+        } catch(Exception J){
             r.sendResponseHeaders(500, -1);
         }
     }
