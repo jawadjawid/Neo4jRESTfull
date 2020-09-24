@@ -3,6 +3,7 @@ package ca.utoronto.utm.mcs;
 import static org.neo4j.driver.Values.parameters;
 
 import ca.utoronto.utm.mcs.exceptions.BadRequestException;
+import ca.utoronto.utm.mcs.exceptions.NotFoundException;
 import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.GraphDatabase;
@@ -12,6 +13,7 @@ import org.neo4j.driver.Session;
 import org.neo4j.driver.Transaction;
 
 import java.util.List;
+import java.util.Map;
 
 public class Neo4JConnector {
 
@@ -44,7 +46,7 @@ public class Neo4JConnector {
         }
     }
 
-    public void addMovie(String name, String movieId) throws Exception, BadRequestException {
+    public void addMovie(String name, String movieId) throws Exception{
         try (Session session = driver.session()){
             try (Transaction tx = session.beginTransaction()) {
                 Result nameResult = tx.run("MATCH (n:movie {name: $x}) RETURN n"
@@ -65,20 +67,34 @@ public class Neo4JConnector {
         }
     }
 
-    public void addRelationship(String name, String movieId) throws Exception, BadRequestException {
+    public void addRelationship(String actorId, String movieId) throws Exception{
         try (Session session = driver.session()){
             try (Transaction tx = session.beginTransaction()) {
-                Result nameResult = tx.run("MATCH (n:movie {name: $x}) RETURN n"
-                        , parameters("x", name ) );
-                Result movieIdResult = tx.run("MATCH (n:movie {id: $x}) RETURN n"
-                        , parameters("x", movieId ) );
-                if (nameResult.list().size() == 0 && movieIdResult.list().size() == 0){
-                    tx.run("MERGE (a:movie {Name: $x, id: $y})",
-                            parameters("x", name, "y", movieId));
+                Result result = tx.run("MATCH (a:actor {id: $x}),(m:movie {id: $y}) return a, m"
+                        , parameters("x", actorId, "y", movieId) );
+                List<Record> lista = result.list();
+                Object ad = lista.get(0);
+                Object sadsad = new Object();
+                //ad.getClass().getDeclaredField("values").getGenericType();
+                Object value = ad.getClass().getDeclaredField("values").get(sadsad);
+
+                while ( result.hasNext() ) {
+                    Map<String,Object> row = (Map<String, Object>) result.next();
+                    String rows = null;
+                    for ( Map.Entry<String,Object> column : row.entrySet() )
+                    {
+                        rows += column.getKey() + ": " + column.getValue() + "; ";
+                    }
+                    rows += "\n";
+                }
+                if (result.list().size() == 2){
+                    tx.run("MATCH (a:actor {id: $x}),(m:movie {id: $y})\n" +
+                                    "MERGE (a)-[r:ACTED_IN]->(m)",
+                            parameters("x", actorId, "y", movieId));
                     tx.commit();
                     session.close();
                 } else{
-                    throw new BadRequestException();
+                    throw new NotFoundException();
                 }
             }
         }catch (Exception e){

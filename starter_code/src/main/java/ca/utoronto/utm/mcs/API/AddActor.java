@@ -47,8 +47,6 @@ public class AddActor implements HttpHandler
             Neo4JConnector nb = new Neo4JConnector();
             nb.addActor(name, actorId);
             nb.close();
-            actorModel.setName(name);
-            actorModel.setActorId(actorId);
             r.sendResponseHeaders(200, -1);
 
         } catch (BadRequestException e){

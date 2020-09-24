@@ -47,8 +47,6 @@ public class AddMovie implements HttpHandler
             Neo4JConnector nb = new Neo4JConnector();
             nb.addMovie(name, movieId);
             nb.close();
-            movieModel.setName(name);
-            movieModel.setMovieId(movieId);
             r.sendResponseHeaders(200, -1);
 
         } catch (BadRequestException e){

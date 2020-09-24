@@ -12,7 +12,8 @@ import ca.utoronto.utm.mcs.Models.MovieModel;
 import ca.utoronto.utm.mcs.Models.RelationshipModel;
 import com.sun.net.httpserver.HttpServer;
 
-public class App 
+public class
+App
 {
     static int PORT = 8080;
     static HttpServer server;
