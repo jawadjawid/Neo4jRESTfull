@@ -2,7 +2,6 @@ package ca.utoronto.utm.mcs.API;
 
 import java.io.IOException;
 
-import ca.utoronto.utm.mcs.Models.RelationshipModel;
 import ca.utoronto.utm.mcs.Neo4JConnector;
 import ca.utoronto.utm.mcs.exceptions.BadRequestException;
 import ca.utoronto.utm.mcs.exceptions.NotFoundException;
@@ -13,13 +12,7 @@ import com.sun.net.httpserver.HttpHandler;
 
 public class AddRelationship implements HttpHandler
 {
-    private static RelationshipModel relationshipModel;
-
-    public AddRelationship(RelationshipModel relationshipModel) {
-        relationshipModel = relationshipModel;
-    }
-
-    public void handle(HttpExchange r) {
+	public void handle(HttpExchange r) {
         try {
             if (r.getRequestMethod().equals("PUT")) {
                 handlePut(r);
@@ -32,8 +25,7 @@ public class AddRelationship implements HttpHandler
     }
 
     public void handlePut(HttpExchange r) throws IOException, JSONException{
-        String actorId = relationshipModel.getActorId();
-        String movieId = relationshipModel.getMovieId();
+        String actorId = "", movieId = "";
 
         try{
             String body = Utils.convert(r.getRequestBody());

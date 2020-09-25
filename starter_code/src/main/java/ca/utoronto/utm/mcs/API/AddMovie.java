@@ -2,7 +2,6 @@ package ca.utoronto.utm.mcs.API;
 
 import java.io.IOException;
 
-import ca.utoronto.utm.mcs.Models.MovieModel;
 import ca.utoronto.utm.mcs.Neo4JConnector;
 import ca.utoronto.utm.mcs.exceptions.BadRequestException;
 import org.json.*;
@@ -12,12 +11,6 @@ import com.sun.net.httpserver.HttpHandler;
 
 public class AddMovie implements HttpHandler
 {
-    private static MovieModel movieModel;
-
-    public AddMovie(MovieModel movieModel) {
-        movieModel = movieModel;
-    }
-
     public void handle(HttpExchange r) {
         try {
             if (r.getRequestMethod().equals("PUT")) {
@@ -31,8 +24,7 @@ public class AddMovie implements HttpHandler
     }
 
     public void handlePut(HttpExchange r) throws IOException, JSONException{
-        String name = movieModel.getName();
-        String movieId = movieModel.getMovieId();
+        String name = "", movieId = "";
 
         try{
             String body = Utils.convert(r.getRequestBody());

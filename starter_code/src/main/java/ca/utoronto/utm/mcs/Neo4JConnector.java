@@ -21,8 +21,8 @@ public class Neo4JConnector {
     private String uriDb;
 
     public Neo4JConnector() {
-        uriDb = "bolt://localhost:11002";
-        driver = GraphDatabase.driver(uriDb, AuthTokens.basic("neo4j","secret"));
+        uriDb = "bolt://localhost:7687";
+        driver = GraphDatabase.driver(uriDb, AuthTokens.basic("neo4j","pass"));
     }
 
     public void addActor(String name, String actorId) throws Exception, BadRequestException {
