@@ -72,27 +72,20 @@ public class Neo4JConnector {
             try (Transaction tx = session.beginTransaction()) {
                 Result result = tx.run("MATCH (a:actor {id: $x}),(m:movie {id: $y}) return a, m"
                         , parameters("x", actorId, "y", movieId) );
-                List<Record> lista = result.list();
-                Object ad = lista.get(0);
-                Object sadsad = new Object();
-                //ad.getClass().getDeclaredField("values").getGenericType();
-                Object value = ad.getClass().getDeclaredField("values").get(sadsad);
-
-                while ( result.hasNext() ) {
-                    Map<String,Object> row = (Map<String, Object>) result.next();
-                    String rows = null;
-                    for ( Map.Entry<String,Object> column : row.entrySet() )
-                    {
-                        rows += column.getKey() + ": " + column.getValue() + "; ";
+                if (result.list().size() == 1){
+                    Result node_boolean = tx.run("RETURN EXISTS( (:actor {id: $x})"
+                                    + "-[:ACTED_IN]-(:movie {id: $y}) ) as bool"
+                            ,parameters("x", actorId, "y", movieId) );
+                    if ((node_boolean.next().values().toArray()[0].toString() == "FALSE")) {
+                        tx.run("MATCH (a:actor {id: $x}),(m:movie {id: $y})\n" +
+                                        "MERGE (a)-[r:ACTED_IN]->(m)",
+                                parameters("x", actorId, "y", movieId));
+                        tx.commit();
+                        session.close();
                     }
-                    rows += "\n";
-                }
-                if (result.list().size() == 2){
-                    tx.run("MATCH (a:actor {id: $x}),(m:movie {id: $y})\n" +
-                                    "MERGE (a)-[r:ACTED_IN]->(m)",
-                            parameters("x", actorId, "y", movieId));
-                    tx.commit();
-                    session.close();
+                    else{
+                        throw new BadRequestException();
+                    }
                 } else{
                     throw new NotFoundException();
                 }
@@ -101,7 +94,6 @@ public class Neo4JConnector {
             throw e;
         }
     }
-
     public void close() {
         driver.close();
     }
