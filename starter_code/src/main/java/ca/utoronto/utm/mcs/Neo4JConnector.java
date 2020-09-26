@@ -11,7 +11,10 @@ import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
 import org.neo4j.driver.Transaction;
+import org.neo4j.driver.Value;
+import org.neo4j.driver.summary.ResultSummary;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -42,6 +45,34 @@ public class Neo4JConnector {
                 }
             }
         }catch (Exception e){
+            throw e;
+        }
+    }
+    
+    public List<String> getActor(String actorId) throws BadRequestException, Exception {
+    	try (Session session = driver.session()){
+    		try(Transaction tx = session.beginTransaction()){
+    			
+    			Result actorNameResult = tx.run("MATCH (n:actor {id: $x}) RETURN n.Name as name", parameters("x", actorId));
+    			List<Record> actorNameRecords = actorNameResult.list();
+    			if(actorNameRecords.size() == 0)
+    				throw new BadRequestException();
+    			
+    			Result movieIdsResult = tx.run("MATCH (:actor {id: $x})-[:ACTED_IN]-(m:movie) RETURN collect(m.id) as movies", parameters("x", actorId));
+    			List<Record> movieIdsRecords = movieIdsResult.list();
+    			
+    			String actorName = actorNameRecords.get(0).get("name").toString();
+    			String movieIds = movieIdsRecords.get(0).get("movies").toString();
+    			
+    			List<String> actorData = new ArrayList<String>();
+    			actorData.add(actorName);
+    			actorData.add(movieIds);
+    			tx.commit();
+    			session.close();
+    			return actorData;
+    		}
+    	} catch (Exception e){
+    		System.out.println("sharmouta");
             throw e;
         }
     }
