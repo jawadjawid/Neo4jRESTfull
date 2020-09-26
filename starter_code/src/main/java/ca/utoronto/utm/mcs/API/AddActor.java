@@ -36,6 +36,7 @@ public class AddActor implements HttpHandler
         	 code = 400;
         	 System.out.printf("JSON code: %d\n", code);
              r.sendResponseHeaders(400, -1);
+             return;
         }
 
         try{

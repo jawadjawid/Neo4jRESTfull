@@ -33,6 +33,7 @@ public class AddMovie implements HttpHandler
             movieId = deserialized.getString("movieId");
         } catch (JSONException e) {
             r.sendResponseHeaders(400, -1);
+            return;
         }
 
         try{
