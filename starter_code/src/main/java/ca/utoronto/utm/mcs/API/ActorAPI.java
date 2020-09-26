@@ -57,7 +57,7 @@ public class ActorAPI implements HttpHandler
     
     public void handleGet(HttpExchange r) throws IOException, JSONException {
     	String actorId = "";
-    	List<String> actorData = new ArrayList<String>();
+    	String actorData;
     	
     	try {
 	        String body = Utils.convert(r.getRequestBody());
@@ -71,17 +71,9 @@ public class ActorAPI implements HttpHandler
             Neo4JConnector nb = new Neo4JConnector();
             actorData = nb.getActor(actorId);
             nb.close();
-            
-            String actorName = actorData.get(0);
-            String movies = actorData.get(1);
-            
-            String response = "\"actorId\": \"" + actorId + "\",\n"
-            		           + "\"name\": " + actorName + ",\n";
-            response += "\"movies\": " + movies;
-            
-            r.sendResponseHeaders(200, response.length());
+            r.sendResponseHeaders(200, actorData.length());
             OutputStream os = r.getResponseBody();
-            os.write(response.getBytes());
+            os.write(actorData.getBytes());
             os.close();
         } catch (BadRequestException e){
             r.sendResponseHeaders(400, -1);

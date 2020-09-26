@@ -4,6 +4,8 @@ import static org.neo4j.driver.Values.parameters;
 
 import ca.utoronto.utm.mcs.exceptions.BadRequestException;
 import ca.utoronto.utm.mcs.exceptions.NotFoundException;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.neo4j.driver.AuthTokens;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.GraphDatabase;
@@ -49,10 +51,9 @@ public class Neo4JConnector {
         }
     }
     
-    public List<String> getActor(String actorId) throws BadRequestException, Exception {
+    public String getActor(String actorId) throws BadRequestException, Exception {
     	try (Session session = driver.session()){
     		try(Transaction tx = session.beginTransaction()){
-    			
     			Result actorNameResult = tx.run("MATCH (n:actor {id: $x}) RETURN n.Name as name", parameters("x", actorId));
     			List<Record> actorNameRecords = actorNameResult.list();
     			if(actorNameRecords.size() == 0)
@@ -61,18 +62,19 @@ public class Neo4JConnector {
     			Result movieIdsResult = tx.run("MATCH (:actor {id: $x})-[:ACTED_IN]-(m:movie) RETURN collect(m.id) as movies", parameters("x", actorId));
     			List<Record> movieIdsRecords = movieIdsResult.list();
     			
-    			String actorName = actorNameRecords.get(0).get("name").toString();
-    			String movieIds = movieIdsRecords.get(0).get("movies").toString();
-    			
-    			List<String> actorData = new ArrayList<String>();
-    			actorData.add(actorName);
-    			actorData.add(movieIds);
-    			tx.commit();
-    			session.close();
-    			return actorData;
+    			String actorName = actorNameRecords.get(0).get("name").asString();
+    			List<Object> movieIds = movieIdsRecords.get(0).get("movies").asList();
+                tx.commit();
+                session.close();
+
+                JSONObject json = new JSONObject();
+                json.put("actorId", actorId);
+                json.put("name", actorName);
+                JSONArray array = new JSONArray(movieIds);
+                json.put("movies", array);
+    			return json.toString();
     		}
     	} catch (Exception e){
-    		System.out.println("sharmouta");
             throw e;
         }
     }
