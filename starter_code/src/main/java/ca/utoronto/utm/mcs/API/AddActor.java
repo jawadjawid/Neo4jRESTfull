@@ -1,6 +1,10 @@
 package ca.utoronto.utm.mcs.API;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 import ca.utoronto.utm.mcs.Neo4JConnector;
 import ca.utoronto.utm.mcs.exceptions.BadRequestException;
@@ -15,8 +19,10 @@ public class AddActor implements HttpHandler
         try {
             if (r.getRequestMethod().equals("PUT")) {
                 handlePut(r);
-            }else{
-                r.sendResponseHeaders(400, -1);
+            }else if(r.getRequestMethod().equals("GET")) {
+                handleGet(r);
+            }else {
+            	r.sendResponseHeaders(400, -1);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -25,7 +31,6 @@ public class AddActor implements HttpHandler
 
     public void handlePut(HttpExchange r) throws IOException, JSONException, Exception{
         String name = "", actorId = "";
-        int code;
 
         try{
 	        String body = Utils.convert(r.getRequestBody());
@@ -33,8 +38,6 @@ public class AddActor implements HttpHandler
 	        name = deserialized.getString("name");
 	        actorId = deserialized.getString("actorId");
         } catch (JSONException e) {
-        	 code = 400;
-        	 System.out.printf("JSON code: %d\n", code);
              r.sendResponseHeaders(400, -1);
         }
 
@@ -44,6 +47,41 @@ public class AddActor implements HttpHandler
             nb.close();
             r.sendResponseHeaders(200, -1);
 
+        } catch (BadRequestException e){
+            r.sendResponseHeaders(400, -1);
+        } catch(Exception J){
+            r.sendResponseHeaders(500, -1);
+        }
+    }
+    
+    public void handleGet(HttpExchange r) throws IOException, JSONException {
+    	String actorId = "";
+    	List<String> actorData = new ArrayList<String>();
+    	
+    	try {
+	        String body = Utils.convert(r.getRequestBody());
+	        JSONObject deserialized = new JSONObject(body);
+	        actorId = deserialized.getString("actorId");
+        } catch (JSONException e) {
+             r.sendResponseHeaders(400, -1);
+        }
+    	
+    	try{
+            Neo4JConnector nb = new Neo4JConnector();
+            actorData = nb.getActor(actorId);
+            nb.close();
+            
+            String actorName = actorData.get(0);
+            String movies = actorData.get(1);
+            
+            String response = "\"actorId\": \"" + actorId + "\",\n"
+            		           + "\"name\": " + actorName + ",\n";
+            response += "\"movies\": " + movies;
+            
+            r.sendResponseHeaders(200, response.length());
+            OutputStream os = r.getResponseBody();
+            os.write(response.getBytes());
+            os.close();
         } catch (BadRequestException e){
             r.sendResponseHeaders(400, -1);
         } catch(Exception J){
