@@ -3,9 +3,9 @@ package ca.utoronto.utm.mcs;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-import ca.utoronto.utm.mcs.API.AddActor;
-import ca.utoronto.utm.mcs.API.AddMovie;
-import ca.utoronto.utm.mcs.API.AddRelationship;
+import ca.utoronto.utm.mcs.API.ActorAPI;
+import ca.utoronto.utm.mcs.API.MovieAPI;
+import ca.utoronto.utm.mcs.API.RelationshipAPI;
 
 import com.sun.net.httpserver.HttpServer;
 
@@ -16,11 +16,11 @@ App
     static HttpServer server;
 
     public static void Initialize(){
-        server.createContext("/api/v1/addActor", new AddActor());
-        server.createContext("/api/v1/addMovie", new AddMovie());
-        server.createContext("/api/v1/addRelationship", new AddRelationship());
-        server.createContext("/api/v1/getActor", new AddActor());
-        server.createContext("/api/v1/getMovie", new AddMovie());
+        server.createContext("/api/v1/addActor", new ActorAPI());
+        server.createContext("/api/v1/addMovie", new MovieAPI());
+        server.createContext("/api/v1/addRelationship", new RelationshipAPI());
+        server.createContext("/api/v1/getActor", new ActorAPI());
+        server.createContext("/api/v1/getMovie", new MovieAPI());
     }
 
     public static void main(String[] args) throws IOException

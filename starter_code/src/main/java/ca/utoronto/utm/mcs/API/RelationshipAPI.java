@@ -10,7 +10,7 @@ import org.json.*;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-public class AddRelationship implements HttpHandler
+public class RelationshipAPI implements HttpHandler
 {
 	public void handle(HttpExchange r) {
         try {
@@ -34,6 +34,7 @@ public class AddRelationship implements HttpHandler
             movieId = deserialized.getString("movieId");
         } catch (JSONException e) {
             r.sendResponseHeaders(400, -1);
+            return;
         }
 
         try{

@@ -2,6 +2,7 @@ package ca.utoronto.utm.mcs.API;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,37 +13,38 @@ import org.json.*;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-public class AddMovie implements HttpHandler
+public class ActorAPI implements HttpHandler
 {
     public void handle(HttpExchange r) {
         try {
             if (r.getRequestMethod().equals("PUT")) {
                 handlePut(r);
             }else if(r.getRequestMethod().equals("GET")) {
-            	handleGet(r);
-            }else{
-                r.sendResponseHeaders(400, -1);
+                handleGet(r);
+            }else {
+            	r.sendResponseHeaders(400, -1);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void handlePut(HttpExchange r) throws IOException, JSONException{
-        String name = "", movieId = "";
+    public void handlePut(HttpExchange r) throws IOException, JSONException, Exception{
+        String name = "", actorId = "";
 
         try{
-            String body = Utils.convert(r.getRequestBody());
-            JSONObject deserialized = new JSONObject(body);
-            name = deserialized.getString("name");
-            movieId = deserialized.getString("movieId");
+	        String body = Utils.convert(r.getRequestBody());
+	        JSONObject deserialized = new JSONObject(body);
+	        name = deserialized.getString("name");
+	        actorId = deserialized.getString("actorId");
         } catch (JSONException e) {
-            r.sendResponseHeaders(400, -1);
+             r.sendResponseHeaders(400, -1);
+             return;
         }
 
         try{
             Neo4JConnector nb = new Neo4JConnector();
-            nb.addMovie(name, movieId);
+            nb.addActor(name, actorId);
             nb.close();
             r.sendResponseHeaders(200, -1);
 
@@ -54,28 +56,28 @@ public class AddMovie implements HttpHandler
     }
     
     public void handleGet(HttpExchange r) throws IOException, JSONException {
-    	String movieId = "";
-    	List<String> movieData = new ArrayList<String>();
+    	String actorId = "";
+    	List<String> actorData = new ArrayList<String>();
     	
     	try {
 	        String body = Utils.convert(r.getRequestBody());
 	        JSONObject deserialized = new JSONObject(body);
-	        movieId = deserialized.getString("movieId");
+	        actorId = deserialized.getString("actorId");
         } catch (JSONException e) {
-            r.sendResponseHeaders(400, -1);
+             r.sendResponseHeaders(400, -1);
         }
     	
     	try{
             Neo4JConnector nb = new Neo4JConnector();
-            movieData = nb.getMovie(movieId);
+            actorData = nb.getActor(actorId);
             nb.close();
             
-            String movieName = movieData.get(0);
-            String actors = movieData.get(1);
+            String actorName = actorData.get(0);
+            String movies = actorData.get(1);
             
-            String response = "\"movieId\": \"" + movieId + "\",\n"
-            		           + "\"name\": " + movieName + ",\n";
-            response += "\"actors\": " + actors;
+            String response = "\"actorId\": \"" + actorId + "\",\n"
+            		           + "\"name\": " + actorName + ",\n";
+            response += "\"movies\": " + movies;
             
             r.sendResponseHeaders(200, response.length());
             OutputStream os = r.getResponseBody();

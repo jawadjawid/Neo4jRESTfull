@@ -76,7 +76,7 @@ public class Neo4JConnector {
     public void addMovie(String name, String movieId) throws Exception{
         try (Session session = driver.session()){
             try (Transaction tx = session.beginTransaction()) {
-                Result nameResult = tx.run("MATCH (n:movie {name: $x}) RETURN n"
+                Result nameResult = tx.run("MATCH (n:movie {Name: $x}) RETURN n"
                         , parameters("x", name ) );
                 Result movieIdResult = tx.run("MATCH (n:movie {id: $x}) RETURN n"
                         , parameters("x", movieId ) );
