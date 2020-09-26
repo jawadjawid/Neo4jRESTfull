@@ -20,6 +20,7 @@ App
         server.createContext("/api/v1/addMovie", new AddMovie());
         server.createContext("/api/v1/addRelationship", new AddRelationship());
         server.createContext("/api/v1/getActor", new AddActor());
+        server.createContext("/api/v1/getMovie", new AddMovie());
     }
 
     public static void main(String[] args) throws IOException
