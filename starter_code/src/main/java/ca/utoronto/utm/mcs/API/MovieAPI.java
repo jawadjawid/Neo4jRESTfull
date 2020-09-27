@@ -18,9 +18,9 @@ public class MovieAPI implements HttpHandler
 {
     public void handle(HttpExchange r) {
         try {
-            if (r.getRequestMethod().equals("PUT")) {
+            if (r.getRequestMethod().equals("PUT") && r.getRequestURI().toString().equals("/api/v1/addMovie")) {
                 handlePut(r);
-            }else if(r.getRequestMethod().equals("GET")) {
+            }else if(r.getRequestMethod().equals("GET") && r.getRequestURI().toString().equals("/api/v1/getMovie")) {
             	handleGet(r);
             }else{
                 r.sendResponseHeaders(400, -1);
