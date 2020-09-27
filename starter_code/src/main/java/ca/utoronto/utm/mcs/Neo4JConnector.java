@@ -133,7 +133,7 @@ public class Neo4JConnector {
             try (Transaction tx = session.beginTransaction()) {
                 Result result = tx.run("MATCH (a:actor {id: $x}),(m:movie {id: $y}) return a, m"
                         , parameters("x", actorId, "y", movieId) );
-                if (result.list().size() == 1){
+                if (result.hasNext()){
                     Result node_boolean = tx.run("RETURN EXISTS( (:actor {id: $x})"
                                     + "-[:ACTED_IN]-(:movie {id: $y}) ) as bool"
                             ,parameters("x", actorId, "y", movieId) );
@@ -143,8 +143,7 @@ public class Neo4JConnector {
                                 parameters("x", actorId, "y", movieId));
                         tx.commit();
                         session.close();
-                    }
-                    else{
+                    } else {
                         throw new BadRequestException();
                     }
                 } else{
@@ -173,6 +172,27 @@ public class Neo4JConnector {
                 json.put("actorId", actorId);
                 json.put("name", movieId);
                 json.put("hasRelationship", bool);
+    			return json.toString();
+    		}
+    	} catch (Exception e){
+            throw e;
+        }
+    }
+    
+    public String computeBaconNumber(String actorId) throws BadRequestException, Exception {
+    	try (Session session = driver.session()){
+    		try(Transaction tx = session.beginTransaction()){	
+    			Result result = tx.run("MATCH (n:actor {id: $x}) RETURN n.id");
+    			if(!result.hasNext())
+    				throw new NotFoundException();
+    			
+    			Result baconResult = tx.run("QUERY", parameters("x", actorId));
+    			int baconNumber = baconResult.list().get(0).get("bool").asInt();
+                tx.commit();
+                session.close();
+
+                JSONObject json = new JSONObject();
+                json.put("baconNumber", baconNumber);
     			return json.toString();
     		}
     	} catch (Exception e){
