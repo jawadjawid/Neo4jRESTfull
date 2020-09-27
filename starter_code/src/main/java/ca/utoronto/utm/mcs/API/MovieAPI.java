@@ -7,6 +7,8 @@ import java.util.List;
 
 import ca.utoronto.utm.mcs.Neo4JConnector;
 import ca.utoronto.utm.mcs.exceptions.BadRequestException;
+import ca.utoronto.utm.mcs.exceptions.NotFoundException;
+
 import org.json.*;
 
 import com.sun.net.httpserver.HttpExchange;
@@ -46,7 +48,6 @@ public class MovieAPI implements HttpHandler
             nb.addMovie(name, movieId);
             nb.close();
             r.sendResponseHeaders(200, -1);
-
         } catch (BadRequestException e){
             r.sendResponseHeaders(400, -1);
         } catch(Exception J){
@@ -56,7 +57,6 @@ public class MovieAPI implements HttpHandler
     
     public void handleGet(HttpExchange r) throws IOException, JSONException {
     	String movieId = "";
-    	String movieData;
     	
     	try {
 	        String body = Utils.convert(r.getRequestBody());
@@ -68,7 +68,7 @@ public class MovieAPI implements HttpHandler
     	
     	try{
             Neo4JConnector nb = new Neo4JConnector();
-            movieData = nb.getMovie(movieId);
+            String movieData = nb.getMovie(movieId);
             nb.close();
             
             r.sendResponseHeaders(200, movieData.length());
@@ -77,6 +77,8 @@ public class MovieAPI implements HttpHandler
             os.close();
         } catch (BadRequestException e){
             r.sendResponseHeaders(400, -1);
+        } catch (NotFoundException b){
+            r.sendResponseHeaders(404, -1);
         } catch(Exception J){
             r.sendResponseHeaders(500, -1);
         }

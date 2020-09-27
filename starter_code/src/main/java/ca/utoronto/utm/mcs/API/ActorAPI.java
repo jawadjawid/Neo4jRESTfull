@@ -8,6 +8,8 @@ import java.util.List;
 
 import ca.utoronto.utm.mcs.Neo4JConnector;
 import ca.utoronto.utm.mcs.exceptions.BadRequestException;
+import ca.utoronto.utm.mcs.exceptions.NotFoundException;
+
 import org.json.*;
 
 import com.sun.net.httpserver.HttpExchange;
@@ -47,7 +49,6 @@ public class ActorAPI implements HttpHandler
             nb.addActor(name, actorId);
             nb.close();
             r.sendResponseHeaders(200, -1);
-
         } catch (BadRequestException e){
             r.sendResponseHeaders(400, -1);
         } catch(Exception J){
@@ -77,6 +78,8 @@ public class ActorAPI implements HttpHandler
             os.close();
         } catch (BadRequestException e){
             r.sendResponseHeaders(400, -1);
+        } catch (NotFoundException b){
+            r.sendResponseHeaders(404, -1);
         } catch(Exception J){
             r.sendResponseHeaders(500, -1);
         }

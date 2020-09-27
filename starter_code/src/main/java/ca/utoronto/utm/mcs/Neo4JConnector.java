@@ -54,9 +54,10 @@ public class Neo4JConnector {
     			Result actorNameResult = tx.run("MATCH (n:actor {id: $x}) RETURN n.Name as name", parameters("x", actorId));
     			List<Record> actorNameRecords = actorNameResult.list();
     			if(actorNameRecords.size() == 0)
-    				throw new BadRequestException();
+    				throw new NotFoundException();
     			
-    			Result movieIdsResult = tx.run("MATCH (:actor {id: $x})-[:ACTED_IN]-(m:movie) RETURN collect(m.id) as movies", parameters("x", actorId));
+    			Result movieIdsResult = tx.run("MATCH (:actor {id: $x})-[:ACTED_IN]-(m:movie) RETURN collect(m.id) as movies", 
+    					parameters("x", actorId));
     			List<Record> movieIdsRecords = movieIdsResult.list();
     			
     			String actorName = actorNameRecords.get(0).get("name").asString();
@@ -104,10 +105,10 @@ public class Neo4JConnector {
     					, parameters("x", movieId));
     			List<Record> movieNameRecords = movieNameResult.list();
     			if(movieNameRecords.size() == 0)
-    				throw new BadRequestException();
+    				throw new NotFoundException();
     			
-    			Result actorIdsResult = tx.run("MATCH (m:movie {id: $x})<-[:ACTED_IN]-(n:actor) RETURN collect(n.id) as actors"
-    					, parameters("x", movieId));
+    			Result actorIdsResult = tx.run("MATCH (m:movie {id: $x})<-[:ACTED_IN]-(n:actor) RETURN collect(n.id) as actors", 
+    					parameters("x", movieId));
     			List<Record> actorIdsRecords = actorIdsResult.list();
     			
     			String movieName = movieNameRecords.get(0).get("name").asString();
@@ -154,6 +155,35 @@ public class Neo4JConnector {
             throw e;
         }
     }
+    
+    public String hasRelationship(String actorId, String movieId) throws BadRequestException, Exception {
+    	try (Session session = driver.session()){
+    		try(Transaction tx = session.beginTransaction()){	
+    			Result actorResult = tx.run("RETURN EXISTS((:actor {id: $x})) as bool", parameters("x", actorId));
+    			boolean actorExists = actorResult.list().get(0).get("bool").asBoolean();
+    			Result movieResult = tx.run("RETURN EXISTS((:movie {id: $x})) as bool", parameters("x", movieId));
+    			boolean movieExists = movieResult.list().get(0).get("bool").asBoolean();
+    			
+    			if(!actorExists || !movieExists)
+    				throw new NotFoundException();
+    			
+    			Result hasRelationshipResult = tx.run("RETURN EXISTS((:actor {id: $x})-[:ACTED_IN]-(:movie {id: $y})) as bool", parameters("x", actorId, "y", movieId));
+    			List<Record> hasRelationshipRecord = hasRelationshipResult.list();
+    			boolean bool = hasRelationshipRecord.get(0).get("bool").asBoolean();
+                tx.commit();
+                session.close();
+
+                JSONObject json = new JSONObject();
+                json.put("actorId", actorId);
+                json.put("name", movieId);
+                json.put("hasRelationship", bool);
+    			return json.toString();
+    		}
+    	} catch (Exception e){
+            throw e;
+        }
+    }
+    
     public void close() {
         driver.close();
     }
