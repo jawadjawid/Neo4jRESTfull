@@ -97,10 +97,9 @@ public class Neo4JConnector {
         }
     }
     
-    public List<String> getMovie(String movieId) throws BadRequestException, Exception {
+    public String getMovie(String movieId) throws BadRequestException, Exception {
     	try (Session session = driver.session()){
     		try(Transaction tx = session.beginTransaction()){
-    			
     			Result movieNameResult = tx.run("MATCH (m:movie {id: $x}) RETURN m.Name as name"
     					, parameters("x", movieId));
     			List<Record> movieNameRecords = movieNameResult.list();
@@ -111,15 +110,17 @@ public class Neo4JConnector {
     					, parameters("x", movieId));
     			List<Record> actorIdsRecords = actorIdsResult.list();
     			
-    			String movieName = movieNameRecords.get(0).get("name").toString();
-    			String actorIds = actorIdsRecords.get(0).get("actors").toString();
-    			
-    			List<String> movieData = new ArrayList<String>();
-    			movieData.add(movieName);
-    			movieData.add(actorIds);
-    			tx.commit();
-    			session.close();
-    			return movieData;
+    			String movieName = movieNameRecords.get(0).get("name").asString();
+    			List<Object> actorIds = actorIdsRecords.get(0).get("actors").asList();
+                tx.commit();
+                session.close();
+
+                JSONObject json = new JSONObject();
+                json.put("actorId", movieId);
+                json.put("name", movieName);
+                JSONArray array = new JSONArray(actorIds);
+                json.put("movies", array);
+    			return json.toString();
     		}
     	} catch (Exception e){
             throw e;

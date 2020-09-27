@@ -56,7 +56,7 @@ public class MovieAPI implements HttpHandler
     
     public void handleGet(HttpExchange r) throws IOException, JSONException {
     	String movieId = "";
-    	List<String> movieData = new ArrayList<String>();
+    	String movieData;
     	
     	try {
 	        String body = Utils.convert(r.getRequestBody());
@@ -71,16 +71,9 @@ public class MovieAPI implements HttpHandler
             movieData = nb.getMovie(movieId);
             nb.close();
             
-            String movieName = movieData.get(0);
-            String actors = movieData.get(1);
-            
-            String response = "\"movieId\": \"" + movieId + "\",\n"
-            		           + "\"name\": " + movieName + ",\n";
-            response += "\"actors\": " + actors;
-            
-            r.sendResponseHeaders(200, response.length());
+            r.sendResponseHeaders(200, movieData.length());
             OutputStream os = r.getResponseBody();
-            os.write(response.getBytes());
+            os.write(movieData.getBytes());
             os.close();
         } catch (BadRequestException e){
             r.sendResponseHeaders(400, -1);
