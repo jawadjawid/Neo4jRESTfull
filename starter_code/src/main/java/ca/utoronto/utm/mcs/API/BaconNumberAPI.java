@@ -14,7 +14,7 @@ import com.sun.net.httpserver.HttpHandler;
 public class BaconNumberAPI implements HttpHandler{
 	public void handle(HttpExchange r) {
         try {
-            if(r.getRequestMethod().equals("GET")) {
+            if(r.getRequestMethod().equals("GET") && r.getRequestURI().toString().equals("/api/v1/computeBaconNumber")) {
             	handleGet(r);
             }else{
                 r.sendResponseHeaders(400, -1);
@@ -26,7 +26,6 @@ public class BaconNumberAPI implements HttpHandler{
 	
 	public void handleGet(HttpExchange r) throws IOException, JSONException {
     	String actorId = "";
-    	
     	try {
 	        String body = Utils.convert(r.getRequestBody());
 	        JSONObject deserialized = new JSONObject(body);

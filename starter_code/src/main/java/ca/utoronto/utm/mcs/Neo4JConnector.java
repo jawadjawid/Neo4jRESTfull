@@ -117,10 +117,10 @@ public class Neo4JConnector {
                 session.close();
 
                 JSONObject json = new JSONObject();
-                json.put("actorId", movieId);
+                json.put("movieId", movieId);
                 json.put("name", movieName);
                 JSONArray array = new JSONArray(actorIds);
-                json.put("movies", array);
+                json.put("actors", array);
     			return json.toString();
     		}
     	} catch (Exception e){
@@ -170,7 +170,7 @@ public class Neo4JConnector {
 
                 JSONObject json = new JSONObject();
                 json.put("actorId", actorId);
-                json.put("name", movieId);
+                json.put("movieId", movieId);
                 json.put("hasRelationship", bool);
     			return json.toString();
     		}
@@ -179,15 +179,25 @@ public class Neo4JConnector {
         }
     }
     
-    public String computeBaconNumber(String actorId) throws BadRequestException, Exception {
+    public String computeBaconNumber(String actorId) throws BadRequestException, NotFoundException, Exception {
     	try (Session session = driver.session()){
     		try(Transaction tx = session.beginTransaction()){	
-    			Result result = tx.run("MATCH (n:actor {id: $x}) RETURN n.id");
-    			if(!result.hasNext())
+    			Result actorResult = tx.run("MATCH (n:actor {id: $x}), (m:actor {Name: $y}) RETURN m.id as baconId", parameters("x", actorId, "y", "Kevin Bacon"));
+    			if(!actorResult.hasNext())
+    				throw new BadRequestException();
+    			String baconId = actorResult.list().get(0).get("baconId").asString();
+    			if(actorId.equals(baconId)) {
+    				JSONObject json = new JSONObject();
+                    json.put("baconNumber", 0);
+        			return json.toString();
+    			}
+    				
+    			
+    			Result baconResult = tx.run("MATCH p=shortestPath((:actor {id: $x})-[*]-(:actor {Name: \"Kevin Bacon\"})) RETURN length(p)/2 as baconNumber", parameters("x", actorId));
+    			if(!baconResult.hasNext())
     				throw new NotFoundException();
     			
-    			Result baconResult = tx.run("QUERY", parameters("x", actorId));
-    			int baconNumber = baconResult.list().get(0).get("bool").asInt();
+    			int baconNumber = baconResult.list().get(0).get("baconNumber").asInt();
                 tx.commit();
                 session.close();
 
