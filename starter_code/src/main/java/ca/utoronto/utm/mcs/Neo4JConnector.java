@@ -159,17 +159,13 @@ public class Neo4JConnector {
     public String hasRelationship(String actorId, String movieId) throws BadRequestException, Exception {
     	try (Session session = driver.session()){
     		try(Transaction tx = session.beginTransaction()){	
-    			Result actorResult = tx.run("RETURN EXISTS((:actor {id: $x})) as bool", parameters("x", actorId));
-    			boolean actorExists = actorResult.list().get(0).get("bool").asBoolean();
-    			Result movieResult = tx.run("RETURN EXISTS((:movie {id: $x})) as bool", parameters("x", movieId));
-    			boolean movieExists = movieResult.list().get(0).get("bool").asBoolean();
-    			
-    			if(!actorExists || !movieExists)
+    			Result result = tx.run("MATCH (n:actor {id: $x}), (m:movie {id: $y})"
+    					+ "RETURN n.id, m.id", parameters("x", actorId, "y", movieId));
+    			if(!result.hasNext())
     				throw new NotFoundException();
     			
     			Result hasRelationshipResult = tx.run("RETURN EXISTS((:actor {id: $x})-[:ACTED_IN]-(:movie {id: $y})) as bool", parameters("x", actorId, "y", movieId));
-    			List<Record> hasRelationshipRecord = hasRelationshipResult.list();
-    			boolean bool = hasRelationshipRecord.get(0).get("bool").asBoolean();
+    			boolean bool = hasRelationshipResult.list().get(0).get("bool").asBoolean();
                 tx.commit();
                 session.close();
 
