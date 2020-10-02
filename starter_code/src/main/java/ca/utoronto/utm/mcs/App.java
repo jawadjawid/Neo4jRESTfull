@@ -24,6 +24,7 @@ App
         server.createContext("/api/v1/getMovie", new MovieAPI());
         server.createContext("/api/v1/hasRelationship", new RelationshipAPI());
         server.createContext("/api/v1/computeBaconNumber", new BaconNumberAPI());
+        server.createContext("/api/v1/computeBaconPath", new BaconNumberAPI());
     }
 
     public static void main(String[] args) throws IOException

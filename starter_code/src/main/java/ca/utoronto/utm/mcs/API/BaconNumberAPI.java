@@ -14,8 +14,11 @@ import com.sun.net.httpserver.HttpHandler;
 public class BaconNumberAPI implements HttpHandler{
 	public void handle(HttpExchange r) {
         try {
-            if(r.getRequestMethod().equals("GET") && r.getRequestURI().toString().equals("/api/v1/computeBaconNumber")) {
-            	handleGet(r);
+            if(r.getRequestMethod().equals("GET")) {
+            	if(r.getRequestURI().toString().equals("/api/v1/computeBaconNumber"))
+            		handleGetNumber(r);
+            	else if(r.getRequestURI().toString().equals("/api/v1/computeBaconPath"))
+            		handleGetPath(r);
             }else{
                 r.sendResponseHeaders(400, -1);
             }
@@ -24,7 +27,7 @@ public class BaconNumberAPI implements HttpHandler{
         }
     }
 	
-	public void handleGet(HttpExchange r) throws IOException, JSONException {
+	public void handleGetNumber(HttpExchange r) throws IOException, JSONException {
     	String actorId = "";
     	try {
 	        String body = Utils.convert(r.getRequestBody());
@@ -49,6 +52,35 @@ public class BaconNumberAPI implements HttpHandler{
             r.sendResponseHeaders(404, -1);
         } catch(Exception J){
             r.sendResponseHeaders(500, -1);
+        }
+    }
+	
+	public void handleGetPath(HttpExchange r) throws IOException, JSONException, Exception {
+    	String actorId = "";
+    	try {
+	        String body = Utils.convert(r.getRequestBody());
+	        JSONObject deserialized = new JSONObject(body);
+	        actorId = deserialized.getString("actorId");
+        } catch (JSONException e) {
+            r.sendResponseHeaders(400, -1);
+        }
+    	
+    	try{
+            Neo4JConnector nb = new Neo4JConnector();
+            String baconPath = nb.computeBaconPath(actorId);
+            nb.close();
+            
+            r.sendResponseHeaders(200, baconPath.length());
+            OutputStream os = r.getResponseBody();
+            os.write(baconPath.getBytes());
+            os.close();
+        } catch (BadRequestException e){
+            r.sendResponseHeaders(400, -1);
+        } catch (NotFoundException b){
+            r.sendResponseHeaders(404, -1);
+        } catch(Exception J){
+        	throw J;
+            //r.sendResponseHeaders(500, -1);
         }
     }
 }

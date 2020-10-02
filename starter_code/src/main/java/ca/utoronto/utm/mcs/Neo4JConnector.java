@@ -13,6 +13,8 @@ import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
 import org.neo4j.driver.Transaction;
+import org.neo4j.driver.Value;
+import org.neo4j.driver.types.Node;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +26,7 @@ public class Neo4JConnector {
 
     public Neo4JConnector() {
         uriDb = "bolt://localhost:7687";
-        driver = GraphDatabase.driver(uriDb, AuthTokens.basic("neo4j","pass"));
+        driver = GraphDatabase.driver(uriDb, AuthTokens.basic("neo4j","1234"));
     }
 
     public void addActor(String name, String actorId) throws Exception, BadRequestException {
@@ -192,8 +194,7 @@ public class Neo4JConnector {
         			return json.toString();
     			}
     				
-    			
-    			Result baconResult = tx.run("MATCH p=shortestPath((:actor {id: $x})-[*]-(:actor {Name: \"Kevin Bacon\"})) RETURN length(p)/2 as baconNumber", parameters("x", actorId));
+    			Result baconResult = tx.run("MATCH p=shortestPath((:actor {id: $x})-[*]-(:actor {Name: $y})) RETURN length(p)/2 as baconNumber", parameters("x", actorId, "y", "Kevin Bacon"));
     			if(!baconResult.hasNext())
     				throw new NotFoundException();
     			
@@ -203,6 +204,77 @@ public class Neo4JConnector {
 
                 JSONObject json = new JSONObject();
                 json.put("baconNumber", baconNumber);
+    			return json.toString();
+    		}
+    	} catch (Exception e){
+            throw e;
+        }
+    }
+    
+    public String computeBaconPath(String actorId) throws BadRequestException, NotFoundException, Exception {
+    	try (Session session = driver.session()){
+    		try(Transaction tx = session.beginTransaction()){	
+    			Result actorResult = tx.run("MATCH (n:actor {id: $x}), (m:actor {Name: $y}) RETURN m.id as baconId", parameters("x", actorId, "y", "Kevin Bacon"));
+    			
+    			if(!actorResult.hasNext())
+    				throw new BadRequestException();
+    			
+    			String baconId = actorResult.list().get(0).get("baconId").asString();
+    			if(actorId.equals(baconId)) {
+    				Result pathResult = tx.run("MATCH (:actor {id: $x})-[:ACTED_IN]-(m:movie) RETURN m.id as movieId", parameters("x", actorId));
+    				String movieId = pathResult.list().get(0).get("movieId").asString();
+    				
+    				JSONObject pathJson = new JSONObject();
+    				pathJson.put("actorId", actorId);
+    				pathJson.put("movieId", movieId);
+    				
+    				JSONArray pathArray = new JSONArray(pathJson);
+    				
+    				JSONObject json = new JSONObject();
+                    json.put("baconNumber", 0);
+                    json.put("baconPath", pathArray);
+        			return json.toString();
+    			}
+    				
+    			Result baconResult = tx.run("MATCH p=shortestPath((:actor {id: $x})-[*]-(:actor {id: $y})) RETURN length(p)/2 as baconNumber, p as baconPath", parameters("x", actorId, "y", "nm0000102"));
+    			if(!baconResult.hasNext())
+    				throw new NotFoundException();
+    			
+    			List<Record> baconRecords = baconResult.list();
+    			
+    			int baconNumber = baconRecords.get(0).get("baconNumber").asInt();
+    			Iterable<Node> pathNodes = baconRecords.get(0).get("baconPath").asPath().nodes();
+    			
+    			List<String> ids = new ArrayList<String>();
+    			
+    			for(Node node : pathNodes)
+    				ids.add(node.get("id").asString());
+    			
+    			JSONArray pathArray = new JSONArray();
+    			boolean flip = false;
+    			
+    			for(int i = 0; i < ids.size() - 1; i++) {
+    				String actor, movie;
+    				if(!flip) {
+    					actor = ids.get(i);
+    					movie = ids.get(i+1);
+    				} else {
+    					actor = ids.get(i+1);
+    					movie = ids.get(i);
+    				}
+    				flip = !flip;
+    				JSONObject pathSeg = new JSONObject();
+    				pathSeg.put("actorId", actor);
+    				pathSeg.put("movieId", movie);
+    				pathArray.put(pathSeg);
+    			}
+    			
+    			JSONObject json = new JSONObject();
+    			json.put("baconNumber", baconNumber);
+    			json.put("baconPath", pathArray);
+    			
+                tx.commit();
+                session.close();
     			return json.toString();
     		}
     	} catch (Exception e){
