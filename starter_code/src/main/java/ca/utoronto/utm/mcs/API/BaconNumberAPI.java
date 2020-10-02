@@ -64,6 +64,7 @@ public class BaconNumberAPI implements HttpHandler{
 	        actorId = deserialized.getString("actorId");
         } catch (JSONException e) {
             r.sendResponseHeaders(400, -1);
+            return;
         }
     	
     	try{
@@ -80,8 +81,7 @@ public class BaconNumberAPI implements HttpHandler{
         } catch (NotFoundException b){
             r.sendResponseHeaders(404, -1);
         } catch(Exception J){
-        	throw J;
-            //r.sendResponseHeaders(500, -1);
+            r.sendResponseHeaders(500, -1);
         }
     }
 }
