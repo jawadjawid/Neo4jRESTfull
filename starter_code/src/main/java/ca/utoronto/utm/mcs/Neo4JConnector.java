@@ -1,23 +1,17 @@
 package ca.utoronto.utm.mcs;
 
-import static org.neo4j.driver.Values.parameters;
-
 import ca.utoronto.utm.mcs.exceptions.BadRequestException;
 import ca.utoronto.utm.mcs.exceptions.NotFoundException;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.neo4j.driver.AuthTokens;
-import org.neo4j.driver.Driver;
-import org.neo4j.driver.GraphDatabase;
 import org.neo4j.driver.Record;
-import org.neo4j.driver.Result;
-import org.neo4j.driver.Session;
-import org.neo4j.driver.Transaction;
-import org.neo4j.driver.Value;
+import org.neo4j.driver.*;
 import org.neo4j.driver.types.Node;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.neo4j.driver.Values.parameters;
 
 public class Neo4JConnector {
 
@@ -214,36 +208,36 @@ public class Neo4JConnector {
     
     public String computeBaconPath(String actorId) throws BadRequestException, NotFoundException, Exception {
     	try (Session session = driver.session()){
-    		try(Transaction tx = session.beginTransaction()){	
-    			Result actorResult = tx.run("MATCH (n:actor {id: $x}), (m:actor {Name: $y}) RETURN m.id as baconId", parameters("x", actorId, "y", "Kevin Bacon"));
-    			
-    			if(!actorResult.hasNext())
-    				throw new BadRequestException();
-    			
-    			String baconId = actorResult.list().get(0).get("baconId").asString();
-    			if(actorId.equals(baconId)) {
-    				Result pathResult = tx.run("MATCH (:actor {id: $x})-[:ACTED_IN]-(m:movie) RETURN m.id as movieId", parameters("x", actorId));
-    				String movieId = pathResult.list().get(0).get("movieId").asString();
-    				
-    				JSONObject pathJson = new JSONObject();
-    				pathJson.put("actorId", actorId);
-    				pathJson.put("movieId", movieId);
-    				
-    				JSONArray pathArray = new JSONArray(pathJson);
-    				
-    				JSONObject json = new JSONObject();
+    		try(Transaction tx = session.beginTransaction()){
+                String baconId = "nm0000102";
+                if(actorId.equals(baconId)) {
+                    Result pathResult = tx.run("MATCH (:actor {id: $x})-[:ACTED_IN]-(m:movie) RETURN m.id as movieId", parameters("x", actorId));
+                    String movieId = pathResult.list().get(0).get("movieId").asString();
+
+                    JSONObject pathJson = new JSONObject();
+                    pathJson.put("actorId", actorId);
+                    pathJson.put("movieId", movieId);
+
+                    JSONArray pathArray = new JSONArray();
+                    pathArray.put(pathJson);
+
+                    JSONObject json = new JSONObject();
                     json.put("baconNumber", 0);
                     json.put("baconPath", pathArray);
-        			return json.toString();
-    			}
-    				
-    			Result baconResult = tx.run("MATCH p=shortestPath((:actor {id: $x})-[*]-(:actor {id: $y})) RETURN length(p)/2 as baconNumber, p as baconPath", parameters("x", actorId, "y", "nm0000102"));
+                    return json.toString();
+                }
+                Result actorResult = tx.run("MATCH (n:actor {id: $x}) RETURN n"
+                        , parameters("x", actorId ));
+    			if(!actorResult.hasNext())
+    				throw new BadRequestException();
+
+    			Result baconResult = tx.run("MATCH p=shortestPath((:actor {id: $x})-[*]-(:actor {id: $y})) RETURN length(p)/2 as baconNumber, p as baconPath", parameters("x", actorId, "y", baconId));
     			if(!baconResult.hasNext())
     				throw new NotFoundException();
     			
     			List<Record> baconRecords = baconResult.list();
     			
-    			int baconNumber = baconRecords.get(0).get("baconNumber").asInt();
+    			String baconNumber = Integer.toString(baconRecords.get(0).get("baconNumber").asInt());
     			Iterable<Node> pathNodes = baconRecords.get(0).get("baconPath").asPath().nodes();
     			
     			List<String> ids = new ArrayList<String>();
@@ -269,12 +263,11 @@ public class Neo4JConnector {
     				pathSeg.put("movieId", movie);
     				pathArray.put(pathSeg);
     			}
-    			
     			JSONObject json = new JSONObject();
     			json.put("baconNumber", baconNumber);
     			json.put("baconPath", pathArray);
     			
-                tx.commit();
+                //tx.commit();
                 session.close();
     			return json.toString();
     		}
