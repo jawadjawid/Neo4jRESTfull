@@ -212,8 +212,11 @@ public class Neo4JConnector {
                 String baconId = "nm0000102";
                 if(actorId.equals(baconId)) {
                     Result pathResult = tx.run("MATCH (:actor {id: $x})-[:ACTED_IN]-(m:movie) RETURN m.id as movieId", parameters("x", actorId));
-                    String movieId = pathResult.list().get(0).get("movieId").asString();
+                    List<Record> pathResultRecords = pathResult.list();
+                    if(pathResultRecords.size() == 0)
+                        throw new NotFoundException();
 
+                    String movieId = pathResultRecords.get(0).get("movieId").asString();
                     JSONObject pathJson = new JSONObject();
                     pathJson.put("actorId", actorId);
                     pathJson.put("movieId", movieId);
@@ -222,7 +225,7 @@ public class Neo4JConnector {
                     pathArray.put(pathJson);
 
                     JSONObject json = new JSONObject();
-                    json.put("baconNumber", 0);
+                    json.put("baconNumber", "0");
                     json.put("baconPath", pathArray);
                     return json.toString();
                 }
@@ -267,7 +270,6 @@ public class Neo4JConnector {
     			json.put("baconNumber", baconNumber);
     			json.put("baconPath", pathArray);
     			
-                //tx.commit();
                 session.close();
     			return json.toString();
     		}
