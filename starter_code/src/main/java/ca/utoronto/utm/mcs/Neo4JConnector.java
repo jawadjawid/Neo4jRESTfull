@@ -26,7 +26,7 @@ public class Neo4JConnector {
 
     public Neo4JConnector() {
         uriDb = "bolt://localhost:7687";
-        driver = GraphDatabase.driver(uriDb, AuthTokens.basic("neo4j","1234"));
+        driver = GraphDatabase.driver(uriDb, AuthTokens.basic("neo4j","pass"));
     }
 
     public void addActor(String name, String actorId) throws Exception, BadRequestException {
@@ -35,7 +35,7 @@ public class Neo4JConnector {
                 Result nameResult = tx.run("MATCH (n:actor {Name: $x}) RETURN n"
                         , parameters("x", name ) );
                 Result actorIdResult = tx.run("MATCH (n:actor {id: $x}) RETURN n"
-                        , parameters("x", actorId ) );
+                        , parameters("x", actorId ));
                 if (nameResult.list().size() == 0 && actorIdResult.list().size() == 0){
                     tx.run("MERGE (a:actor {Name: $x, id: $y})",
                             parameters("x", name, "y", actorId));
@@ -183,23 +183,24 @@ public class Neo4JConnector {
     
     public String computeBaconNumber(String actorId) throws BadRequestException, NotFoundException, Exception {
     	try (Session session = driver.session()){
-    		try(Transaction tx = session.beginTransaction()){	
-    			Result actorResult = tx.run("MATCH (n:actor {id: $x}), (m:actor {Name: $y}) RETURN m.id as baconId", parameters("x", actorId, "y", "Kevin Bacon"));
+    		try(Transaction tx = session.beginTransaction()){
+                String baconId = "nm0000102";
+    		    if (actorId.equals(baconId)){
+                    JSONObject json = new JSONObject();
+                    json.put("baconNumber", "0");
+                    return json.toString();
+                }
+
+                Result actorResult = tx.run("MATCH (n:actor {id: $x}) RETURN n"
+                        , parameters("x", actorId ));
     			if(!actorResult.hasNext())
     				throw new BadRequestException();
-    			String baconId = actorResult.list().get(0).get("baconId").asString();
-    			if(actorId.equals(baconId)) {
-    				JSONObject json = new JSONObject();
-                    json.put("baconNumber", 0);
-        			return json.toString();
-    			}
-    				
-    			Result baconResult = tx.run("MATCH p=shortestPath((:actor {id: $x})-[*]-(:actor {Name: $y})) RETURN length(p)/2 as baconNumber", parameters("x", actorId, "y", "Kevin Bacon"));
+
+    			Result baconResult = tx.run("MATCH p=shortestPath((:actor {id: $x})-[*]-(:actor {id: $y})) RETURN length(p)/2 as baconNumber", parameters("x", actorId, "y", baconId));
     			if(!baconResult.hasNext())
     				throw new NotFoundException();
     			
-    			int baconNumber = baconResult.list().get(0).get("baconNumber").asInt();
-                tx.commit();
+    			String baconNumber = Integer.toString(baconResult.list().get(0).get("baconNumber").asInt());
                 session.close();
 
                 JSONObject json = new JSONObject();
