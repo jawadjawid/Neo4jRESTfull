@@ -26,12 +26,12 @@ public class Neo4JConnector {
     public void addActor(String name, String actorId) throws Exception, BadRequestException {
         try (Session session = driver.session()){
             try (Transaction tx = session.beginTransaction()) {
-                Result nameResult = tx.run("MATCH (n:actor {Name: $x}) RETURN n"
+                Result nameResult = tx.run("MATCH (n:actor {name: $x}) RETURN n"
                         , parameters("x", name ) );
                 Result actorIdResult = tx.run("MATCH (n:actor {id: $x}) RETURN n"
                         , parameters("x", actorId ));
                 if (nameResult.list().size() == 0 && actorIdResult.list().size() == 0){
-                    tx.run("MERGE (a:actor {Name: $x, id: $y})",
+                    tx.run("MERGE (a:actor {name: $x, id: $y})",
                             parameters("x", name, "y", actorId));
                     tx.commit();
                     session.close();
@@ -47,7 +47,7 @@ public class Neo4JConnector {
     public String getActor(String actorId) throws BadRequestException, Exception {
     	try (Session session = driver.session()){
     		try(Transaction tx = session.beginTransaction()){
-    			Result actorNameResult = tx.run("MATCH (n:actor {id: $x}) RETURN n.Name as name", parameters("x", actorId));
+    			Result actorNameResult = tx.run("MATCH (n:actor {id: $x}) RETURN n.name as name", parameters("x", actorId));
     			List<Record> actorNameRecords = actorNameResult.list();
     			if(actorNameRecords.size() == 0)
     				throw new NotFoundException();
@@ -76,12 +76,12 @@ public class Neo4JConnector {
     public void addMovie(String name, String movieId) throws Exception{
         try (Session session = driver.session()){
             try (Transaction tx = session.beginTransaction()) {
-                Result nameResult = tx.run("MATCH (n:movie {Name: $x}) RETURN n"
+                Result nameResult = tx.run("MATCH (n:movie {name: $x}) RETURN n"
                         , parameters("x", name ) );
                 Result movieIdResult = tx.run("MATCH (n:movie {id: $x}) RETURN n"
                         , parameters("x", movieId ) );
                 if (nameResult.list().size() == 0 && movieIdResult.list().size() == 0){
-                    tx.run("MERGE (a:movie {Name: $x, id: $y})",
+                    tx.run("MERGE (a:movie {name: $x, id: $y})",
                             parameters("x", name, "y", movieId));
                     tx.commit();
                     session.close();
@@ -97,7 +97,7 @@ public class Neo4JConnector {
     public String getMovie(String movieId) throws BadRequestException, Exception {
     	try (Session session = driver.session()){
     		try(Transaction tx = session.beginTransaction()){
-    			Result movieNameResult = tx.run("MATCH (m:movie {id: $x}) RETURN m.Name as name"
+    			Result movieNameResult = tx.run("MATCH (m:movie {id: $x}) RETURN m.name as name"
     					, parameters("x", movieId));
     			List<Record> movieNameRecords = movieNameResult.list();
     			if(movieNameRecords.size() == 0)
