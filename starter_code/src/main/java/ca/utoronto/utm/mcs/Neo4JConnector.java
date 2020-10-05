@@ -15,15 +15,14 @@ import static org.neo4j.driver.Values.parameters;
 
 public class Neo4JConnector {
 
-    private Driver driver;
-    private String uriDb;
+    private final Driver driver;
 
     public Neo4JConnector() {
-        uriDb = "bolt://localhost:7687";
+        String uriDb = "bolt://localhost:7687";
         driver = GraphDatabase.driver(uriDb, AuthTokens.basic("neo4j","pass"));
     }
 
-    public void addActor(String name, String actorId) throws Exception, BadRequestException {
+    public void addActor(String name, String actorId) throws Exception {
         try (Session session = driver.session()){
             try (Transaction tx = session.beginTransaction()) {
                 Result nameResult = tx.run("MATCH (n:actor {name: $x}) RETURN n"
@@ -39,15 +38,14 @@ public class Neo4JConnector {
                     throw new BadRequestException();
                 }
             }
-        }catch (Exception e){
-            throw e;
         }
     }
     
-    public String getActor(String actorId) throws BadRequestException, Exception {
+    public String getActor(String actorId) throws Exception {
     	try (Session session = driver.session()){
     		try(Transaction tx = session.beginTransaction()){
-    			Result actorNameResult = tx.run("MATCH (n:actor {id: $x}) RETURN n.name as name", parameters("x", actorId));
+    			Result actorNameResult = tx.run("MATCH (n:actor {id: $x}) RETURN n.name as name"
+                        , parameters("x", actorId));
     			List<Record> actorNameRecords = actorNameResult.list();
     			if(actorNameRecords.size() == 0)
     				throw new NotFoundException();
@@ -68,9 +66,7 @@ public class Neo4JConnector {
                 json.put("movies", array);
     			return json.toString();
     		}
-    	} catch (Exception e){
-            throw e;
-        }
+    	}
     }
 
     public void addMovie(String name, String movieId) throws Exception{
@@ -89,12 +85,10 @@ public class Neo4JConnector {
                     throw new BadRequestException();
                 }
             }
-        }catch (Exception e){
-            throw e;
         }
     }
     
-    public String getMovie(String movieId) throws BadRequestException, Exception {
+    public String getMovie(String movieId) throws Exception {
     	try (Session session = driver.session()){
     		try(Transaction tx = session.beginTransaction()){
     			Result movieNameResult = tx.run("MATCH (m:movie {id: $x}) RETURN m.name as name"
@@ -119,9 +113,7 @@ public class Neo4JConnector {
                 json.put("actors", array);
     			return json.toString();
     		}
-    	} catch (Exception e){
-            throw e;
-        }
+    	}
     }
 
     public void addRelationship(String actorId, String movieId) throws Exception{
@@ -133,7 +125,7 @@ public class Neo4JConnector {
                     Result node_boolean = tx.run("RETURN EXISTS( (:actor {id: $x})"
                                     + "-[:ACTED_IN]-(:movie {id: $y}) ) as bool"
                             ,parameters("x", actorId, "y", movieId) );
-                    if ((node_boolean.next().values().toArray()[0].toString() == "FALSE")) {
+                    if ((node_boolean.next().values().toArray()[0].toString().equals("FALSE"))) {
                         tx.run("MATCH (a:actor {id: $x}),(m:movie {id: $y})\n" +
                                         "MERGE (a)-[r:ACTED_IN]->(m)",
                                 parameters("x", actorId, "y", movieId));
@@ -146,12 +138,10 @@ public class Neo4JConnector {
                     throw new NotFoundException();
                 }
             }
-        }catch (Exception e){
-            throw e;
         }
     }
     
-    public String hasRelationship(String actorId, String movieId) throws BadRequestException, Exception {
+    public String hasRelationship(String actorId, String movieId) throws Exception {
     	try (Session session = driver.session()){
     		try(Transaction tx = session.beginTransaction()){	
     			Result result = tx.run("MATCH (n:actor {id: $x}), (m:movie {id: $y})"
@@ -170,12 +160,10 @@ public class Neo4JConnector {
                 json.put("hasRelationship", bool);
     			return json.toString();
     		}
-    	} catch (Exception e){
-            throw e;
-        }
+    	}
     }
     
-    public String computeBaconNumber(String actorId) throws BadRequestException, NotFoundException, Exception {
+    public String computeBaconNumber(String actorId) throws Exception {
     	try (Session session = driver.session()){
     		try(Transaction tx = session.beginTransaction()){
                 String baconId = "nm0000102";
@@ -190,7 +178,8 @@ public class Neo4JConnector {
     			if(!actorResult.hasNext())
     				throw new BadRequestException();
 
-    			Result baconResult = tx.run("MATCH p=shortestPath((:actor {id: $x})-[*]-(:actor {id: $y})) RETURN length(p)/2 as baconNumber", parameters("x", actorId, "y", baconId));
+    			Result baconResult = tx.run("MATCH p=shortestPath((:actor {id: $x})-[*]-(:actor {id: $y})) RETURN length(p)/2 as baconNumber"
+                        , parameters("x", actorId, "y", baconId));
     			if(!baconResult.hasNext())
     				throw new NotFoundException();
     			
@@ -201,17 +190,16 @@ public class Neo4JConnector {
                 json.put("baconNumber", baconNumber);
     			return json.toString();
     		}
-    	} catch (Exception e){
-            throw e;
-        }
+    	}
     }
     
-    public String computeBaconPath(String actorId) throws BadRequestException, NotFoundException, Exception {
+    public String computeBaconPath(String actorId) throws Exception {
     	try (Session session = driver.session()){
     		try(Transaction tx = session.beginTransaction()){
                 String baconId = "nm0000102";
                 if(actorId.equals(baconId)) {
-                    Result pathResult = tx.run("MATCH (:actor {id: $x})-[:ACTED_IN]-(m:movie) RETURN m.id as movieId", parameters("x", actorId));
+                    Result pathResult = tx.run("MATCH (:actor {id: $x})-[:ACTED_IN]-(m:movie) RETURN m.id as movieId"
+                            , parameters("x", actorId));
                     List<Record> pathResultRecords = pathResult.list();
                     if(pathResultRecords.size() == 0)
                         throw new NotFoundException();
@@ -234,7 +222,8 @@ public class Neo4JConnector {
     			if(!actorResult.hasNext())
     				throw new BadRequestException();
 
-    			Result baconResult = tx.run("MATCH p=shortestPath((:actor {id: $x})-[*]-(:actor {id: $y})) RETURN length(p)/2 as baconNumber, p as baconPath", parameters("x", actorId, "y", baconId));
+    			Result baconResult = tx.run("MATCH p=shortestPath((:actor {id: $x})-[*]-(:actor {id: $y})) RETURN length(p)/2 as baconNumber, p as baconPath"
+                        , parameters("x", actorId, "y", baconId));
     			if(!baconResult.hasNext())
     				throw new NotFoundException();
     			
@@ -243,7 +232,7 @@ public class Neo4JConnector {
     			String baconNumber = Integer.toString(baconRecords.get(0).get("baconNumber").asInt());
     			Iterable<Node> pathNodes = baconRecords.get(0).get("baconPath").asPath().nodes();
     			
-    			List<String> ids = new ArrayList<String>();
+    			List<String> ids = new ArrayList<>();
     			
     			for(Node node : pathNodes)
     				ids.add(node.get("id").asString());
@@ -273,9 +262,7 @@ public class Neo4JConnector {
                 session.close();
     			return json.toString();
     		}
-    	} catch (Exception e){
-            throw e;
-        }
+    	}
     }
     
     public void close() {

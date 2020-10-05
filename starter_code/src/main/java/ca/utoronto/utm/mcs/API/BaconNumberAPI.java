@@ -27,8 +27,8 @@ public class BaconNumberAPI implements HttpHandler{
         }
     }
 	
-	public void handleGetNumber(HttpExchange r) throws IOException, JSONException {
-    	String actorId = "";
+	public void handleGetNumber(HttpExchange r) throws IOException {
+    	String actorId;
     	try {
 	        String body = Utils.convert(r.getRequestBody());
 	        JSONObject deserialized = new JSONObject(body);
@@ -56,8 +56,8 @@ public class BaconNumberAPI implements HttpHandler{
         }
     }
 	
-	public void handleGetPath(HttpExchange r) throws IOException, JSONException, Exception {
-    	String actorId = "";
+	public void handleGetPath(HttpExchange r) throws Exception {
+    	String actorId;
     	try {
 	        String body = Utils.convert(r.getRequestBody());
 	        JSONObject deserialized = new JSONObject(body);

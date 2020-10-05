@@ -28,8 +28,8 @@ public class MovieAPI implements HttpHandler
         }
     }
 
-    public void handlePut(HttpExchange r) throws IOException, JSONException{
-        String name = "", movieId = "";
+    public void handlePut(HttpExchange r) throws IOException {
+        String name, movieId;
 
         try{
             String body = Utils.convert(r.getRequestBody());
@@ -53,8 +53,8 @@ public class MovieAPI implements HttpHandler
         }
     }
     
-    public void handleGet(HttpExchange r) throws IOException, JSONException {
-    	String movieId = "";
+    public void handleGet(HttpExchange r) throws IOException {
+    	String movieId;
     	
     	try {
 	        String body = Utils.convert(r.getRequestBody());

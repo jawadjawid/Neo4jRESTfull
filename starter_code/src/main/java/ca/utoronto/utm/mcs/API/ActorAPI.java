@@ -28,8 +28,8 @@ public class ActorAPI implements HttpHandler
         }
     }
 
-    public void handlePut(HttpExchange r) throws IOException, JSONException, Exception{
-        String name = "", actorId = "";
+    public void handlePut(HttpExchange r) throws Exception{
+        String name, actorId;
 
         try{
 	        String body = Utils.convert(r.getRequestBody());
@@ -53,8 +53,8 @@ public class ActorAPI implements HttpHandler
         }
     }
     
-    public void handleGet(HttpExchange r) throws IOException, JSONException {
-    	String actorId = "";
+    public void handleGet(HttpExchange r) throws IOException {
+    	String actorId;
     	String actorData;
     	
     	try {
