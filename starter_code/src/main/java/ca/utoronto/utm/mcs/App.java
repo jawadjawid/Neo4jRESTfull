@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 
 import ca.utoronto.utm.mcs.API.ActorAPI;
-import ca.utoronto.utm.mcs.API.BaconNumberAPI;
+import ca.utoronto.utm.mcs.API.BaconAPI;
 import ca.utoronto.utm.mcs.API.MovieAPI;
 import ca.utoronto.utm.mcs.API.RelationshipAPI;
 
@@ -23,8 +23,8 @@ App
         server.createContext("/api/v1/getActor", new ActorAPI());
         server.createContext("/api/v1/getMovie", new MovieAPI());
         server.createContext("/api/v1/hasRelationship", new RelationshipAPI());
-        server.createContext("/api/v1/computeBaconNumber", new BaconNumberAPI());
-        server.createContext("/api/v1/computeBaconPath", new BaconNumberAPI());
+        server.createContext("/api/v1/computeBaconNumber", new BaconAPI());
+        server.createContext("/api/v1/computeBaconPath", new BaconAPI());
     }
 
     public static void main(String[] args) throws IOException
